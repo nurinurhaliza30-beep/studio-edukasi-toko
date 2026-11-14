@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Member - Studio Edukasi</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; font-family: Arial, sans-serif;
+      background: linear-gradient(135deg,#eee3ff,#fff4e8);
+      color: #30283c;
+    }
+    .card {
+      width: 100%; max-width: 410px; background: white;
+      padding: 32px; border-radius: 22px;
+      box-shadow: 0 12px 35px #66508020;
+    }
+    h1 { text-align: center; color: #7651a3; margin-bottom: 8px; }
+    .sub { text-align: center; color: #777; margin-bottom: 25px; }
+    input {
+      width: 100%; padding: 14px; margin: 9px 0;
+      border: 1px solid #ddd; border-radius: 10px; font-size: 15px;
+    }
+    button {
+      width: 100%; padding: 14px; margin-top: 12px;
+      border: 0; border-radius: 10px; background: #7955a5;
+      color: white; font-size: 16px; font-weight: bold;
+    }
+    .secondary { background: #eee6f5; color: #68458e; }
+    #message { text-align: center; font-size: 14px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Studio Edukasi</h1>
+    <p class="sub">Area Login Member</p>
+
+    <input id="email" type="email" placeholder="Alamat email" autocomplete="email">
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+
+    <button onclick="login()">Login Member</button>
+    <button class="secondary" onclick="signup()">Daftar Akun Baru</button>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://wfpmqqzmyyfknnesasmn.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_jpNbPfxOW8zdqwdAeEvn3Q_COexb-PB";
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    function showMessage(text) {
+      document.getElementById("message").textContent = text;
+    }
+
+    async function signup() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || password.length < 6) {
+        showMessage("Isi email dan password minimal 6 karakter.");
+        return;
+      }
+
+      const { error } = await db.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + "/login.html"
+        }
+      });
+
+      showMessage(error ? error.message :
+        "Pendaftaran berhasil. Silakan cek email untuk konfirmasi akun.");
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const { data, error } = await db.auth.signInWithPassword({
+        email, password
+      });
+
+      if (error) {
+        showMessage(error.message);
+        return;
+      }
+
+      window.location.href = "member.html";
+    }
+  </script>
+</body>
+</html>
