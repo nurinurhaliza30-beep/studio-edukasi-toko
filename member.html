@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Member Area - Studio Edukasi</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f8f5fc;color:#30283c}
+header{background:#7955a5;color:white;padding:25px 20px;text-align:center}
+header h1{margin:0 0 8px}
+main{max-width:950px;margin:28px auto;padding:0 16px}
+.welcome,.product{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 15px #00000008}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.product h3{margin:0 0 10px;color:#7955a5}
+.product p{color:#777;font-size:14px;min-height:35px}
+a.btn,button{display:inline-block;background:#7955a5;color:white;text-decoration:none;border:0;border-radius:9px;padding:12px 16px;font-size:14px;cursor:pointer}
+button.logout{background:#eee6f5;color:#68458e}
+#status{text-align:center;padding:30px}
+footer{text-align:center;color:#888;padding:25px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Studio Edukasi</h1>
+  <div>Member Area · Pusat Produk Digital</div>
+</header>
+
+<main>
+  <div id="status">Memeriksa akun member...</div>
+
+  <section id="dashboard" hidden>
+    <div class="welcome">
+      <h2>Selamat datang!</h2>
+      <p id="memberEmail"></p>
+      <p>Akses seluruh koleksi produk digital Studio Edukasi.</p>
+      <button class="logout" onclick="logout()">Keluar</button>
+    </div>
+
+    <h2>Koleksi Produk</h2>
+    <div class="grid" id="products"></div>
+  </section>
+</main>
+
+<footer>© Studio Edukasi · Area khusus member</footer>
+
+<script>
+const SUPABASE_URL = "https://wfpmqqzmyyfknnesasmn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_jpNbPfxOW8zdqwdAeEvn3Q_COexb-PB";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const folders = [
+  ["Worksheet","Lembar aktivitas dan latihan anak","https://drive.google.com/drive/folders/1x836opP-bMNZaZk4bQg2QC7IrH6tIn0P"],
+  ["Video Animasi","Koleksi video animasi edukasi","https://drive.google.com/drive/folders/1yoigerKk7YHTDpOg_-G1N3IPywjw6pDZ"],
+  ["Storybook","Buku cerita edukasi anak","https://drive.google.com/drive/folders/133nitnhvVb44qiEjZ1a9Yiyws8Y2Re5a"],
+  ["Presentation","Materi presentasi pembelajaran","https://drive.google.com/drive/folders/1frIdZR6nzOayTNn4WDdKsqrnpynj82uz"],
+  ["Game Interaktif Canva","Game interaktif berbasis Canva","https://drive.google.com/drive/folders/17yKvpNYfBWkx1PEEk-z_ZP1i-Dl3Bdzm"],
+  ["Game HTML","Game edukasi HTML","https://drive.google.com/drive/folders/1Qtrf5yTPMToPAqLrGfrb1uj30ZpHmo_3"],
+  ["Comic","Komik edukasi anak","https://drive.google.com/drive/folders/1bKWVDyISlRWERSnfwMO3Oh6Ql8Qs3sqI"]
+];
+
+async function init(){
+  const {data:{session}} = await db.auth.getSession();
+
+  if(!session){
+    location.href="login.html";
+    return;
+  }
+
+  const {data,error} = await db
+    .from("member_access")
+    .select("status,email")
+    .eq("user_id",session.user.id)
+    .maybeSingle();
+
+  if(error){
+    document.getElementById("status").textContent =
+      "Belum bisa memeriksa status member. Periksa izin akses tabel member_access di Supabase.";
+    return;
+  }
+
+  if(!data || data.status !== "active"){
+    document.getElementById("status").textContent =
+      "Akun kamu belum aktif. Silakan hubungi admin Studio Edukasi setelah pembayaran diverifikasi.";
+    return;
+  }
+
+  document.getElementById("status").hidden=true;
+  document.getElementById("dashboard").hidden=false;
+  document.getElementById("memberEmail").textContent =
+    "Login sebagai: " + (data.email || session.user.email);
+
+  document.getElementById("products").innerHTML = folders.map(item => `
+    <article class="product">
+      <h3>${item[0]}</h3>
+      <p>${item[1]}</p>
+      <a class="btn" href="${item[2]}" target="_blank" rel="noopener">Buka Produk</a>
+    </article>
+  `).join("");
+}
+
+async function logout(){
+  await db.auth.signOut();
+  location.href="login.html";
+}
+
+init();
+</script>
+</body>
+</html>
